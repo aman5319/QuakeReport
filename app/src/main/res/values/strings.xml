@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">QuakeReport</string>
+    <string name="near_by">NearBy</string>
+</resources>
