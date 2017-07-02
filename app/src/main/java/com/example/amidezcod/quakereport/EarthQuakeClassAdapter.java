@@ -15,6 +15,7 @@ import android.widget.TextView;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Locale;
 
@@ -23,11 +24,14 @@ import java.util.Locale;
  */
 
 public class EarthQuakeClassAdapter extends RecyclerView.Adapter<EarthQuakeClassAdapter.MyViewHolder> {
+    private static final int VIEW_TYPE_GREATEST = 0;
+    private static final int VIEW_TYPE_CASUAL = 1;
     private final String LOCATION_SEPERATOR = "of";
     int lastPosition = -1;
+    EarthQuakePojo maxMagEarthQuakePojoObject;
     private Context mContext;
     private ArrayList<EarthQuakePojo> mEarthQuakePojoArrayList;
-
+    private boolean mUseGretestLayout;
 
     public EarthQuakeClassAdapter(Context mContext, ArrayList<EarthQuakePojo> mEarthQuakePojoArrayList) {
         this.mContext = mContext;
@@ -36,9 +40,37 @@ public class EarthQuakeClassAdapter extends RecyclerView.Adapter<EarthQuakeClass
 
     @Override
     public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(mContext).inflate(R.layout.list_item_earthquake, parent, false);
+        int layoutId;
+
+        switch (viewType) {
+
+            case VIEW_TYPE_GREATEST: {
+                layoutId = R.layout.greatest_mag_item;
+                break;
+            }
+
+            case VIEW_TYPE_CASUAL: {
+                layoutId = R.layout.list_item_earthquake;
+                break;
+            }
+
+            default:
+                throw new IllegalArgumentException("Invalid view type, value of " + viewType);
+        }
+
+        View view = LayoutInflater.from(mContext).inflate(layoutId, parent, false);
+        view.setFocusable(true);
         return new MyViewHolder(view);
 
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        if (position == 0) {
+            return VIEW_TYPE_GREATEST;
+        } else {
+            return VIEW_TYPE_CASUAL;
+        }
     }
 
     @Override
@@ -48,35 +80,39 @@ public class EarthQuakeClassAdapter extends RecyclerView.Adapter<EarthQuakeClass
 
     @Override
     public void onBindViewHolder(MyViewHolder holder, int position) {
-        EarthQuakePojo earthQuakePojo = mEarthQuakePojoArrayList.get(position);
-
-        //for magnitude
-        String formattedMagnitude = formattedMagnitude(earthQuakePojo.getMagnitude());
-        holder.mag.setText(formattedMagnitude);
-        GradientDrawable gradientDrawable = (GradientDrawable) holder.mag.getBackground();
-        gradientDrawable.setColor(getMagnitudecolor(earthQuakePojo.getMagnitude()));
-
-        //for location
-        String Location = earthQuakePojo.getPlaceName();
-        String primaryLocation;
-        String locationOffset;
-        if (Location.contains(LOCATION_SEPERATOR)) {
-            String[] newString = Location.split("of");
-            locationOffset = newString[0] + LOCATION_SEPERATOR;
-            primaryLocation = newString[1];
+        if (holder.gretestMAg != null) {
+            holder.gretestMAg.setText(String.valueOf(maxMagEarthQuakePojoObject.getMagnitude()));
         } else {
-            locationOffset = mContext.getString(R.string.near_by);
-            primaryLocation = Location;
-        }
-        holder.locationOffset.setText(locationOffset);
-        holder.primaryLocation.setText(primaryLocation);
+            EarthQuakePojo earthQuakePojo = mEarthQuakePojoArrayList.get(position);
 
-        //for date and time
-        long epochtime = earthQuakePojo.getTime();
-        Date date = new Date(epochtime);
-        holder.date.setText(formatDate(date));
-        holder.time.setText(formatTime(date));
-        setAnimation(holder.itemView, position);
+            //for magnitude
+            String formattedMagnitude = formattedMagnitude(earthQuakePojo.getMagnitude());
+            holder.mag.setText(formattedMagnitude);
+            GradientDrawable gradientDrawable = (GradientDrawable) holder.mag.getBackground();
+            gradientDrawable.setColor(getMagnitudecolor(earthQuakePojo.getMagnitude()));
+
+            //for location
+            String Location = earthQuakePojo.getPlaceName();
+            String primaryLocation;
+            String locationOffset;
+            if (Location.contains(LOCATION_SEPERATOR)) {
+                String[] newString = Location.split(LOCATION_SEPERATOR);
+                locationOffset = newString[0] + LOCATION_SEPERATOR;
+                primaryLocation = newString[1].trim();
+            } else {
+                locationOffset = mContext.getString(R.string.near_by);
+                primaryLocation = Location;
+            }
+            holder.locationOffset.setText(locationOffset);
+            holder.primaryLocation.setText(primaryLocation);
+
+            //for date and time
+            long epochtime = earthQuakePojo.getTime();
+            Date date = new Date(epochtime);
+            holder.date.setText(formatDate(date));
+            holder.time.setText(formatTime(date));
+            setAnimation(holder.itemView, position);
+        }
     }
 
     private void setAnimation(View viewToAnimate, int position) {
@@ -102,6 +138,8 @@ public class EarthQuakeClassAdapter extends RecyclerView.Adapter<EarthQuakeClass
     }
 
     public void swapData(ArrayList<EarthQuakePojo> earthQuakePojos) {
+        Collections.sort(earthQuakePojos, Collections.<EarthQuakePojo>reverseOrder());
+        maxMagEarthQuakePojoObject = earthQuakePojos.remove(0);
         this.mEarthQuakePojoArrayList = earthQuakePojos;
     }
 
@@ -166,9 +204,11 @@ public class EarthQuakeClassAdapter extends RecyclerView.Adapter<EarthQuakeClass
     public class MyViewHolder extends RecyclerView.ViewHolder {
         CardView mCardView;
         TextView mag, locationOffset, primaryLocation, date, time;
+        TextView gretestMAg;
 
         private MyViewHolder(View itemView) {
             super(itemView);
+            gretestMAg = itemView.findViewById(R.id.greatest_mag);
             mCardView = itemView.findViewById(R.id.cardview_elements);
             mag = itemView.findViewById(R.id.magnitude);
             locationOffset = itemView.findViewById(R.id.location_offset);
