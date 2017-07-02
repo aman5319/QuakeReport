@@ -1,7 +1,5 @@
 package com.example.amidezcod.quakereport;
 
-import java.net.URL;
-
 /**
  * Created by amidezcod on 2/7/17.
  */
@@ -9,14 +7,14 @@ import java.net.URL;
 public class EarthQuakePojo {
     private long time;
     private String placeName;
-    private URL url;
+    private String StringUrl;
     private double magnitude;
     private int tsunami;
 
-    public EarthQuakePojo(long time, String place_name, URL url, double magnitude, int tsunami) {
+    public EarthQuakePojo(long time, String place_name, String url, double magnitude, int tsunami) {
         this.time = time;
         this.placeName = place_name;
-        this.url = url;
+        this.StringUrl = url;
         this.magnitude = magnitude;
         this.tsunami = tsunami;
     }
@@ -29,8 +27,8 @@ public class EarthQuakePojo {
         return placeName;
     }
 
-    public URL getUrl() {
-        return url;
+    public String getStringUrl() {
+        return StringUrl;
     }
 
     public double getMagnitude() {

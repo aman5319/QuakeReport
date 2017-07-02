@@ -75,7 +75,7 @@ public class EarthQuakeClassAdapter extends RecyclerView.Adapter<EarthQuakeClass
     }
 
     private String formatDate(Date date) {
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/YYYY", Locale.getDefault());
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("LLL dd, yyyy", Locale.getDefault());
         return simpleDateFormat.format(date);
     }
 
