@@ -1,15 +1,18 @@
 package com.example.amidezcod.quakereport;
 
 import android.app.LoaderManager;
-import android.content.AsyncTaskLoader;
 import android.content.Intent;
 import android.content.Loader;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -17,10 +20,12 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<ArrayList<EarthQuakePojo>> {
+public class MainActivity extends AppCompatActivity
+        implements LoaderManager.LoaderCallbacks<ArrayList<EarthQuakePojo>>,
+        SharedPreferences.OnSharedPreferenceChangeListener {
     private static final int EARTHQUAKE_LOADER_ID = 1;
     private static final String USGS_REQUEST_URL =
-            "http://earthquake.usgs.gov/fdsnws/event/1/query";
+            "https://earthquake.usgs.gov/fdsnws/event/1/query";
     TextView mEmptyStateTextView;
     private RecyclerView mRecyclerView;
     private EarthQuakeClassAdapter earthQuakeClassAdapter;
@@ -33,11 +38,16 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         setupRecyclerview();
 
         earthQuakeClassAdapter = new EarthQuakeClassAdapter(this, new ArrayList<EarthQuakePojo>());
+        // Obtain a reference to the SharedPreferences file for this app
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        // And register to be notified of preference changes
+        // So we know when the user has adjusted the query settings
+        prefs.registerOnSharedPreferenceChangeListener(this);
 
         ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
         if (networkInfo != null && networkInfo.isConnected()) {
-            getLoaderManager().initLoader(EARTHQUAKE_LOADER_ID, null, MainActivity.this).forceLoad();
+            getLoaderManager().initLoader(EARTHQUAKE_LOADER_ID, null, MainActivity.this);
         } else {
             View progressIndicator = findViewById(R.id.loading_indicator);
             progressIndicator.setVisibility(View.GONE);
@@ -56,28 +66,30 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     @Override
     public Loader<ArrayList<EarthQuakePojo>> onCreateLoader(int i, Bundle bundle) {
-        return new AsyncTaskLoader<ArrayList<EarthQuakePojo>>(this) {
-            @Override
-            public ArrayList<EarthQuakePojo> loadInBackground() {
-                QueryUtility queryUtility = new QueryUtility();
-
-
-                return queryUtility.fetchRequestUrl("https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&limit=10&minmagnitude=5");
-
-            }
-        };
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+        String minmag = sharedPreferences.getString(getString(R.string.min_mag_key), "0");
+        String orderby = sharedPreferences.getString(getString(R.string.list_key_orderby),
+                getString(R.string.settings_orderby_mag_value));
+        Uri uri = Uri.parse(USGS_REQUEST_URL);
+        Uri.Builder builder = uri.buildUpon();
+        builder.appendQueryParameter("format", "geojson");
+        builder.appendQueryParameter("minmagnitude", minmag);
+        builder.appendQueryParameter("orderby", orderby);
+        Log.v("AMAN" , builder.toString());
+        return new EarthquakeLoader(this,builder.toString());
     }
 
     @Override
     public void onLoadFinished(Loader<ArrayList<EarthQuakePojo>> loader, ArrayList<EarthQuakePojo> earthQuakePojos) {
+        Log.v("AMAN" , "InsideLoadfinished");
 
         View loadingIndicator = findViewById(R.id.loading_indicator);
         loadingIndicator.setVisibility(View.GONE);
         // Set empty state text to display "No earthquakes found."
         if (earthQuakePojos != null && !earthQuakePojos.isEmpty()) {
             earthQuakeClassAdapter.swapData(earthQuakePojos);
-            earthQuakeClassAdapter.notifyDataSetChanged();
             mRecyclerView.setAdapter(earthQuakeClassAdapter);
+
         } else {
             earthQuakeClassAdapter.clear();
             mEmptyStateTextView.setText(R.string.no_earthquakes);
@@ -104,6 +116,19 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
+        if (s.equals(getString(R.string.min_mag_key)) || s.equals(getString(R.string.list_key_orderby))) {
+            mEmptyStateTextView.setVisibility(View.GONE);
+            earthQuakeClassAdapter.clear();
+            // Show the loading indicator while new data is being fetched
+            View loadingIndicator = findViewById(R.id.loading_indicator);
+            loadingIndicator.setVisibility(View.VISIBLE);
+            // Restart the loader to requery the USGS as the query settings have been updated
+            getLoaderManager().restartLoader(EARTHQUAKE_LOADER_ID, null, MainActivity.this);
         }
     }
 }

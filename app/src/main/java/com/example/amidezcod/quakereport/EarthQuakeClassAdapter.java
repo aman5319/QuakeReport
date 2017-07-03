@@ -197,7 +197,7 @@ public class EarthQuakeClassAdapter extends RecyclerView.Adapter<EarthQuakeClass
         if (mEarthQuakePojoArrayList != null && !mEarthQuakePojoArrayList.isEmpty()) {
             int sise = mEarthQuakePojoArrayList.size();
             mEarthQuakePojoArrayList.clear();
-            notifyItemRangeRemoved(0, sise);
+               notifyItemRangeRemoved(0, sise);
         }
     }
 
