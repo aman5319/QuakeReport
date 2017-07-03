@@ -1,7 +1,9 @@
 package com.example.amidezcod.quakereport;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.drawable.GradientDrawable;
+import android.net.Uri;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
@@ -28,7 +30,6 @@ public class EarthQuakeClassAdapter extends RecyclerView.Adapter<EarthQuakeClass
     private static final int VIEW_TYPE_CASUAL = 1;
     private final String LOCATION_SEPERATOR = "of";
     int lastPosition = -1;
-    EarthQuakePojo maxMagEarthQuakePojoObject;
     private Context mContext;
     private ArrayList<EarthQuakePojo> mEarthQuakePojoArrayList;
     private boolean mUseGretestLayout;
@@ -80,10 +81,33 @@ public class EarthQuakeClassAdapter extends RecyclerView.Adapter<EarthQuakeClass
 
     @Override
     public void onBindViewHolder(MyViewHolder holder, int position) {
-        if (holder.gretestMAg != null) {
-            holder.gretestMAg.setText(String.valueOf(maxMagEarthQuakePojoObject.getMagnitude()));
+        EarthQuakePojo earthQuakePojo = mEarthQuakePojoArrayList.get(position);
+        if (holder.magGreat != null) {
+            String formattedMagnitude = formattedMagnitude(earthQuakePojo.getMagnitude());
+            holder.magGreat.setText(formattedMagnitude);
+
+
+            //for location
+            String Location = earthQuakePojo.getPlaceName();
+            String primaryLocation;
+            String locationOffset;
+            if (Location.contains(LOCATION_SEPERATOR)) {
+                String[] newString = Location.split(LOCATION_SEPERATOR);
+                locationOffset = newString[0] + LOCATION_SEPERATOR;
+                primaryLocation = newString[1].trim();
+            } else {
+                locationOffset = mContext.getString(R.string.near_by);
+                primaryLocation = Location;
+            }
+            holder.locationOffsetGreat.setText(locationOffset);
+            holder.primaryLocationGreat.setText(primaryLocation);
+
+            //for date and time
+            long epochtime = earthQuakePojo.getTime();
+            Date date = new Date(epochtime);
+            holder.dateGreat.setText(formatDate(date));
+            holder.timeGreat.setText(formatTime(date));
         } else {
-            EarthQuakePojo earthQuakePojo = mEarthQuakePojoArrayList.get(position);
 
             //for magnitude
             String formattedMagnitude = formattedMagnitude(earthQuakePojo.getMagnitude());
@@ -111,8 +135,8 @@ public class EarthQuakeClassAdapter extends RecyclerView.Adapter<EarthQuakeClass
             Date date = new Date(epochtime);
             holder.date.setText(formatDate(date));
             holder.time.setText(formatTime(date));
-            setAnimation(holder.itemView, position);
         }
+        setAnimation(holder.itemView, position);
     }
 
     private void setAnimation(View viewToAnimate, int position) {
@@ -139,7 +163,6 @@ public class EarthQuakeClassAdapter extends RecyclerView.Adapter<EarthQuakeClass
 
     public void swapData(ArrayList<EarthQuakePojo> earthQuakePojos) {
         Collections.sort(earthQuakePojos, Collections.<EarthQuakePojo>reverseOrder());
-        maxMagEarthQuakePojoObject = earthQuakePojos.remove(0);
         this.mEarthQuakePojoArrayList = earthQuakePojos;
     }
 
@@ -197,24 +220,41 @@ public class EarthQuakeClassAdapter extends RecyclerView.Adapter<EarthQuakeClass
         if (mEarthQuakePojoArrayList != null && !mEarthQuakePojoArrayList.isEmpty()) {
             int sise = mEarthQuakePojoArrayList.size();
             mEarthQuakePojoArrayList.clear();
-               notifyItemRangeRemoved(0, sise);
+            notifyItemRangeRemoved(0, sise);
         }
     }
 
-    public class MyViewHolder extends RecyclerView.ViewHolder {
+    private EarthQuakePojo getItem(int position) {
+        return mEarthQuakePojoArrayList.get(position);
+    }
+
+    public class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         CardView mCardView;
         TextView mag, locationOffset, primaryLocation, date, time;
-        TextView gretestMAg;
+
+        TextView magGreat, locationOffsetGreat, primaryLocationGreat, dateGreat, timeGreat;
 
         private MyViewHolder(View itemView) {
             super(itemView);
-            gretestMAg = itemView.findViewById(R.id.greatest_mag);
+            itemView.setOnClickListener(this);
+            magGreat = itemView.findViewById(R.id.magnitude_great);
+            locationOffsetGreat = itemView.findViewById(R.id.location_offset_great);
+            primaryLocationGreat = itemView.findViewById(R.id.primary_location_great);
+            dateGreat = itemView.findViewById(R.id.date_great);
+            timeGreat = itemView.findViewById(R.id.time_great);
             mCardView = itemView.findViewById(R.id.cardview_elements);
             mag = itemView.findViewById(R.id.magnitude);
             locationOffset = itemView.findViewById(R.id.location_offset);
             primaryLocation = itemView.findViewById(R.id.primary_location);
             date = itemView.findViewById(R.id.date);
             time = itemView.findViewById(R.id.time);
+        }
+
+        @Override
+        public void onClick(View view) {
+            Uri uri = Uri.parse(getItem(getAdapterPosition()).getStringUrl());
+            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+            mContext.startActivity(intent);
 
         }
     }
