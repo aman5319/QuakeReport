@@ -8,7 +8,10 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -27,6 +30,7 @@ public class MainActivity extends AppCompatActivity
     private static final String USGS_REQUEST_URL =
             "https://earthquake.usgs.gov/fdsnws/event/1/query";
     TextView mEmptyStateTextView;
+    SwipeRefreshLayout swipeRefreshLayout;
     private RecyclerView mRecyclerView;
     private EarthQuakeClassAdapter earthQuakeClassAdapter;
 
@@ -36,7 +40,17 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         mEmptyStateTextView = (TextView) findViewById(R.id.empty_view);
         setupRecyclerview();
-
+        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.container_recycler);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refreshAction();
+            }
+        });
+        swipeRefreshLayout.setColorSchemeColors(ContextCompat.getColor(this, android.R.color.holo_green_light),
+                ContextCompat.getColor(this, android.R.color.holo_blue_bright),
+                ContextCompat.getColor(this, android.R.color.holo_red_light),
+                ContextCompat.getColor(this, android.R.color.holo_orange_light));
         earthQuakeClassAdapter = new EarthQuakeClassAdapter(this, new ArrayList<EarthQuakePojo>());
         // Obtain a reference to the SharedPreferences file for this app
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -57,6 +71,17 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    private void refreshAction() {
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                earthQuakeClassAdapter.clear();
+                getLoaderManager().restartLoader(EARTHQUAKE_LOADER_ID, null, MainActivity.this);
+                swipeRefreshLayout.setRefreshing(false);
+            }
+        }, 2000);
+    }
+
 
     private void setupRecyclerview() {
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
@@ -75,13 +100,13 @@ public class MainActivity extends AppCompatActivity
         builder.appendQueryParameter("format", "geojson");
         builder.appendQueryParameter("minmagnitude", minmag);
         builder.appendQueryParameter("orderby", orderby);
-        Log.v("AMAN" , builder.toString());
-        return new EarthquakeLoader(this,builder.toString());
+        Log.v("AMAN", builder.toString());
+        return new EarthquakeLoader(this, builder.toString());
     }
 
     @Override
     public void onLoadFinished(Loader<ArrayList<EarthQuakePojo>> loader, ArrayList<EarthQuakePojo> earthQuakePojos) {
-        Log.v("AMAN" , "InsideLoadfinished");
+        Log.v("AMAN", "InsideLoadfinished");
 
         View loadingIndicator = findViewById(R.id.loading_indicator);
         loadingIndicator.setVisibility(View.GONE);
