@@ -3,4 +3,11 @@
     <string name="near_by">NearBy</string>
     <string name="no_internet_message">No Internet connectivity</string>
     <string name="no_earthquakes">No Earthquake Data Found</string>
+    <string name="min_magnitude_default_value">6</string>
+    <string name="title_minimum_magnitude">Minimum Magnitude</string>
+    <string name="min_mag_key">min_mag</string>
+    <string name="list_key_orderby">list_order_by_key</string>
+    <string name="label_time">Most Recent</string>
+    <string name="settings_orderby_mag_value">magnitude</string>
+    <string name="settings_orderby_most_recent_value">time</string>
 </resources>
