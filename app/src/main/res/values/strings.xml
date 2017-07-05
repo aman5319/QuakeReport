@@ -10,4 +10,6 @@
     <string name="label_time">Most Recent</string>
     <string name="settings_orderby_mag_value">magnitude</string>
     <string name="settings_orderby_most_recent_value">time</string>
+    <string name="settings">Settings</string>
+    <string name="refersh">Refersh</string>
 </resources>

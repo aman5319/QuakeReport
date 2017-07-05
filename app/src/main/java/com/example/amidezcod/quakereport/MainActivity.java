@@ -76,7 +76,22 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void run() {
                 earthQuakeClassAdapter.clear();
-                getLoaderManager().restartLoader(EARTHQUAKE_LOADER_ID, null, MainActivity.this);
+                ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+                NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+                if (networkInfo != null && networkInfo.isConnected()) {
+                    View progressIndicator = findViewById(R.id.loading_indicator);
+                    progressIndicator.setVisibility(View.GONE);
+                    mEmptyStateTextView.setVisibility(View.GONE);
+                    View image = findViewById(R.id.imageview);
+                    image.setVisibility(View.GONE);
+                    getLoaderManager().restartLoader(EARTHQUAKE_LOADER_ID, null, MainActivity.this);
+                } else {
+                    View progressIndicator = findViewById(R.id.loading_indicator);
+                    progressIndicator.setVisibility(View.GONE);
+                    mEmptyStateTextView.setText(R.string.no_internet_message);
+                    View image = findViewById(R.id.imageview);
+                    image.setVisibility(View.VISIBLE);
+                }
                 swipeRefreshLayout.setRefreshing(false);
             }
         }, 2000);
@@ -138,6 +153,9 @@ public class MainActivity extends AppCompatActivity
             case R.id.menu_settings:
                 Intent intent = new Intent(this, SettingsActivity.class);
                 startActivity(intent);
+                return true;
+            case R.id.refresh:
+                refreshAction();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
