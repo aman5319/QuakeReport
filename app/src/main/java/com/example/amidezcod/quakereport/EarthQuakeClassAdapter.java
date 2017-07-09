@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,16 +24,14 @@ import java.util.Locale;
  * Created by amidezcod on 2/7/17.
  */
 
-public class EarthQuakeClassAdapter extends RecyclerView.Adapter<EarthQuakeClassAdapter.MyViewHolder> {
+class EarthQuakeClassAdapter extends RecyclerView.Adapter<EarthQuakeClassAdapter.MyViewHolder> {
     private static final int VIEW_TYPE_GREATEST = 0;
     private static final int VIEW_TYPE_CASUAL = 1;
-    private final String LOCATION_SEPERATOR = "of";
-    int lastPosition = -1;
+    private int lastPosition = -1;
     private Context mContext;
     private ArrayList<EarthQuakePojo> mEarthQuakePojoArrayList;
-    private boolean mUseGretestLayout;
 
-    public EarthQuakeClassAdapter(Context mContext, ArrayList<EarthQuakePojo> mEarthQuakePojoArrayList) {
+    EarthQuakeClassAdapter(Context mContext, ArrayList<EarthQuakePojo> mEarthQuakePojoArrayList) {
         this.mContext = mContext;
         this.mEarthQuakePojoArrayList = mEarthQuakePojoArrayList;
     }
@@ -81,6 +78,7 @@ public class EarthQuakeClassAdapter extends RecyclerView.Adapter<EarthQuakeClass
 
     @Override
     public void onBindViewHolder(MyViewHolder holder, int position) {
+        final String LOCATION_SEPERATOR = "of";
         EarthQuakePojo earthQuakePojo = mEarthQuakePojoArrayList.get(position);
         if (holder.magGreat != null) {
             String formattedMagnitude = formattedMagnitude(earthQuakePojo.getMagnitude());
@@ -161,7 +159,7 @@ public class EarthQuakeClassAdapter extends RecyclerView.Adapter<EarthQuakeClass
         return simpleDateFormat.format(date);
     }
 
-    public void swapData(ArrayList<EarthQuakePojo> earthQuakePojos) {
+    void swapData(ArrayList<EarthQuakePojo> earthQuakePojos) {
         Collections.sort(earthQuakePojos, Collections.<EarthQuakePojo>reverseOrder());
         this.mEarthQuakePojoArrayList = earthQuakePojos;
     }
@@ -216,7 +214,7 @@ public class EarthQuakeClassAdapter extends RecyclerView.Adapter<EarthQuakeClass
         return mEarthQuakePojoArrayList.size();
     }
 
-    public void clear() {
+    void clear() {
         if (mEarthQuakePojoArrayList != null && !mEarthQuakePojoArrayList.isEmpty()) {
             int sise = mEarthQuakePojoArrayList.size();
             mEarthQuakePojoArrayList.clear();
@@ -228,11 +226,10 @@ public class EarthQuakeClassAdapter extends RecyclerView.Adapter<EarthQuakeClass
         return mEarthQuakePojoArrayList.get(position);
     }
 
-    public class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        CardView mCardView;
-        TextView mag, locationOffset, primaryLocation, date, time;
+    class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+        private TextView mag, locationOffset, primaryLocation, date, time;
 
-        TextView magGreat, locationOffsetGreat, primaryLocationGreat, dateGreat, timeGreat;
+        private TextView magGreat, locationOffsetGreat, primaryLocationGreat, dateGreat, timeGreat;
 
         private MyViewHolder(View itemView) {
             super(itemView);
@@ -242,7 +239,6 @@ public class EarthQuakeClassAdapter extends RecyclerView.Adapter<EarthQuakeClass
             primaryLocationGreat = itemView.findViewById(R.id.primary_location_great);
             dateGreat = itemView.findViewById(R.id.date_great);
             timeGreat = itemView.findViewById(R.id.time_great);
-            mCardView = itemView.findViewById(R.id.cardview_elements);
             mag = itemView.findViewById(R.id.magnitude);
             locationOffset = itemView.findViewById(R.id.location_offset);
             primaryLocation = itemView.findViewById(R.id.primary_location);

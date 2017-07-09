@@ -6,14 +6,14 @@ import android.support.annotation.NonNull;
  * Created by amidezcod on 2/7/17.
  */
 
-public class EarthQuakePojo implements Comparable<EarthQuakePojo> {
+ class EarthQuakePojo implements Comparable<EarthQuakePojo> {
     private long time;
     private String placeName;
     private String StringUrl;
     private double magnitude;
     private int tsunami;
 
-    public EarthQuakePojo(long time, String place_name, String url, double magnitude, int tsunami) {
+     EarthQuakePojo(long time, String place_name, String url, double magnitude, int tsunami) {
         this.time = time;
         this.placeName = place_name;
         this.StringUrl = url;
@@ -21,23 +21,23 @@ public class EarthQuakePojo implements Comparable<EarthQuakePojo> {
         this.tsunami = tsunami;
     }
 
-    public long getTime() {
+     long getTime() {
         return time;
     }
 
-    public String getPlaceName() {
+     String getPlaceName() {
         return placeName;
     }
 
-    public String getStringUrl() {
+     String getStringUrl() {
         return StringUrl;
     }
 
-    public double getMagnitude() {
+     double getMagnitude() {
         return magnitude;
     }
 
-    public int getTsunami() {
+     int getTsunami() {
         return tsunami;
     }
 

@@ -26,31 +26,23 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity
         implements LoaderManager.LoaderCallbacks<ArrayList<EarthQuakePojo>>,
         SharedPreferences.OnSharedPreferenceChangeListener {
+
+
     private static final int EARTHQUAKE_LOADER_ID = 1;
     private static final String USGS_REQUEST_URL =
             "https://earthquake.usgs.gov/fdsnws/event/1/query";
-    TextView mEmptyStateTextView;
-    SwipeRefreshLayout swipeRefreshLayout;
+    private TextView mEmptyStateTextView;
+    private SwipeRefreshLayout swipeRefreshLayout;
     private RecyclerView mRecyclerView;
     private EarthQuakeClassAdapter earthQuakeClassAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setupRecyclerview();
+        setupSwipeRerfeshLayout();
         setContentView(R.layout.activity_main);
         mEmptyStateTextView = (TextView) findViewById(R.id.empty_view);
-        setupRecyclerview();
-        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.container_recycler);
-        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                refreshAction();
-            }
-        });
-        swipeRefreshLayout.setColorSchemeColors(ContextCompat.getColor(this, android.R.color.holo_green_light),
-                ContextCompat.getColor(this, android.R.color.holo_blue_bright),
-                ContextCompat.getColor(this, android.R.color.holo_red_light),
-                ContextCompat.getColor(this, android.R.color.holo_orange_light));
         earthQuakeClassAdapter = new EarthQuakeClassAdapter(this, new ArrayList<EarthQuakePojo>());
         // Obtain a reference to the SharedPreferences file for this app
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -63,13 +55,10 @@ public class MainActivity extends AppCompatActivity
         if (networkInfo != null && networkInfo.isConnected()) {
             getLoaderManager().initLoader(EARTHQUAKE_LOADER_ID, null, MainActivity.this);
         } else {
-            View progressIndicator = findViewById(R.id.loading_indicator);
-            progressIndicator.setVisibility(View.GONE);
-            mEmptyStateTextView.setText(R.string.no_internet_message);
-            View image = findViewById(R.id.imageview);
-            image.setVisibility(View.VISIBLE);
+            clearView();
         }
     }
+
 
     private void refreshAction() {
         new Handler().postDelayed(new Runnable() {
@@ -86,11 +75,7 @@ public class MainActivity extends AppCompatActivity
                     image.setVisibility(View.GONE);
                     getLoaderManager().restartLoader(EARTHQUAKE_LOADER_ID, null, MainActivity.this);
                 } else {
-                    View progressIndicator = findViewById(R.id.loading_indicator);
-                    progressIndicator.setVisibility(View.GONE);
-                    mEmptyStateTextView.setText(R.string.no_internet_message);
-                    View image = findViewById(R.id.imageview);
-                    image.setVisibility(View.VISIBLE);
+                    clearView();
                 }
                 swipeRefreshLayout.setRefreshing(false);
             }
@@ -104,6 +89,19 @@ public class MainActivity extends AppCompatActivity
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
     }
 
+    private void setupSwipeRerfeshLayout() {
+        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.container_recycler);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refreshAction();
+            }
+        });
+        swipeRefreshLayout.setColorSchemeColors(ContextCompat.getColor(this, android.R.color.holo_green_light),
+                ContextCompat.getColor(this, android.R.color.holo_blue_bright),
+                ContextCompat.getColor(this, android.R.color.holo_red_light),
+                ContextCompat.getColor(this, android.R.color.holo_orange_light));
+    }
     @Override
     public Loader<ArrayList<EarthQuakePojo>> onCreateLoader(int i, Bundle bundle) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
@@ -173,5 +171,13 @@ public class MainActivity extends AppCompatActivity
             // Restart the loader to requery the USGS as the query settings have been updated
             getLoaderManager().restartLoader(EARTHQUAKE_LOADER_ID, null, MainActivity.this);
         }
+    }
+
+    private void clearView() {
+        View progressIndicator = findViewById(R.id.loading_indicator);
+        progressIndicator.setVisibility(View.GONE);
+        mEmptyStateTextView.setText(R.string.no_internet_message);
+        View image = findViewById(R.id.imageview);
+        image.setVisibility(View.VISIBLE);
     }
 }

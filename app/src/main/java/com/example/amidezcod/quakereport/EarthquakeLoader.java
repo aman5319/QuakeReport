@@ -8,8 +8,7 @@ import java.util.ArrayList;
 /**
  * Created by amidezcod on 3/7/17.
  */
-
-public class EarthquakeLoader extends AsyncTaskLoader<ArrayList<EarthQuakePojo>> {
+class EarthquakeLoader extends AsyncTaskLoader<ArrayList<EarthQuakePojo>> {
     /**
      * Query URL
      */
@@ -21,7 +20,7 @@ public class EarthquakeLoader extends AsyncTaskLoader<ArrayList<EarthQuakePojo>>
      * @param context of the activity
      * @param url     to load data from
      */
-    public EarthquakeLoader(Context context, String url) {
+    EarthquakeLoader(Context context, String url) {
         super(context);
         mUrl = url;
     }

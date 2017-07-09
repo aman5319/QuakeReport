@@ -21,13 +21,12 @@ import java.util.ArrayList;
  * Created by amidezcod on 2/7/17.
  */
 
-public class QueryUtility {
-    private final String TAG = getClass().getSimpleName();
+ class QueryUtility {
 
-    public QueryUtility() {
+     QueryUtility() {
     }
 
-    public ArrayList<EarthQuakePojo> fetchRequestUrl(String requestUrl) {
+     ArrayList<EarthQuakePojo> fetchRequestUrl(String requestUrl) {
         URL url = createUrl(requestUrl);
         String jsonresponse = "";
         try {
@@ -35,8 +34,7 @@ public class QueryUtility {
         } catch (IOException e) {
             Log.v("TAG", e.getMessage());
         }
-        ArrayList<EarthQuakePojo> earthQuakePojos = extractDataFromJson(jsonresponse);
-        return earthQuakePojos;
+        return extractDataFromJson(jsonresponse);
     }
 
     private ArrayList<EarthQuakePojo> extractDataFromJson(String jsonresponse) {

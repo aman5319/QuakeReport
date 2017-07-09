@@ -23,11 +23,11 @@ public class SettingsActivity extends AppCompatActivity {
         public void onCreate(@Nullable Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.settings_main);
-            Preference listpreference = findPreference(getString(R.string.list_key_orderby));
-            bindPrefernceSummaryToValue(listpreference);
+            Preference listPreference = findPreference(getString(R.string.list_key_orderby));
+            bindPrefernceSummaryToValue(listPreference);
 
-            Preference editpreference = findPreference(getString(R.string.min_mag_key));
-            bindPrefernceSummaryToValue(editpreference);
+            Preference editPreference = findPreference(getString(R.string.min_mag_key));
+            bindPrefernceSummaryToValue(editPreference);
 
         }
 

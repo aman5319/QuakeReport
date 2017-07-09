@@ -30,6 +30,7 @@
             tools:text="Aman" />
 
         <ImageView
+            android:contentDescription="@string/message_on_internet_connectivity_problem"
             android:id="@+id/imageview"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
