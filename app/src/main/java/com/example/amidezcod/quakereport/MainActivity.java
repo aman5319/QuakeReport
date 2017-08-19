@@ -1,17 +1,10 @@
 package com.example.amidezcod.quakereport;
 
-import android.app.LoaderManager;
 import android.content.Intent;
-import android.content.Loader;
 import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -21,67 +14,100 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
+import com.example.amidezcod.quakereport.Model.Example;
+import com.example.amidezcod.quakereport.Model.Feature;
+import com.example.amidezcod.quakereport.Model.Properties;
+import com.example.amidezcod.quakereport.Prefrences.SettingsActivity;
+import com.example.amidezcod.quakereport.adapter.EarthQuakeClassAdapter;
+import com.example.amidezcod.quakereport.rest.APiClient;
+import com.example.amidezcod.quakereport.rest.ApiInterface;
+
 import java.util.ArrayList;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class MainActivity extends AppCompatActivity
-        implements LoaderManager.LoaderCallbacks<ArrayList<EarthQuakePojo>>,
-        SharedPreferences.OnSharedPreferenceChangeListener {
+        implements SharedPreferences.OnSharedPreferenceChangeListener {
 
 
     private static final int EARTHQUAKE_LOADER_ID = 1;
     private static final String USGS_REQUEST_URL =
             "https://earthquake.usgs.gov/fdsnws/event/1/query";
+    public ApiInterface apiService = APiClient.getApiClient().create(ApiInterface.class);
     private TextView mEmptyStateTextView;
-    private SwipeRefreshLayout swipeRefreshLayout;
     private RecyclerView mRecyclerView;
     private EarthQuakeClassAdapter earthQuakeClassAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setupRecyclerview();
-        setupSwipeRerfeshLayout();
         setContentView(R.layout.activity_main);
+        setupRecyclerview();
         mEmptyStateTextView = (TextView) findViewById(R.id.empty_view);
-        earthQuakeClassAdapter = new EarthQuakeClassAdapter(this, new ArrayList<EarthQuakePojo>());
         // Obtain a reference to the SharedPreferences file for this app
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         // And register to be notified of preference changes
         // So we know when the user has adjusted the query settings
         prefs.registerOnSharedPreferenceChangeListener(this);
+        earthQuakeClassAdapter = new EarthQuakeClassAdapter(MainActivity.this, new ArrayList<Properties>());
 
-        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-        if (networkInfo != null && networkInfo.isConnected()) {
-            getLoaderManager().initLoader(EARTHQUAKE_LOADER_ID, null, MainActivity.this);
-        } else {
-            clearView();
-        }
+        response();
     }
 
+    public void response() {
 
-    private void refreshAction() {
-        new Handler().postDelayed(new Runnable() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+        String minmag = sharedPreferences.getString(getString(R.string.min_mag_key), "0");
+        String orderby = sharedPreferences.getString(getString(R.string.list_key_orderby),
+                getString(R.string.settings_orderby_mag_value));
+
+        final Call<Example> earthQuakePojoCall = apiService.getEarthquake("geojson",
+                minmag,
+                orderby);
+        Log.v("AMAN", "URL" + earthQuakePojoCall.request().url().toString());
+        earthQuakePojoCall.enqueue(new Callback<Example>() {
             @Override
-            public void run() {
-                earthQuakeClassAdapter.clear();
-                ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-                NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-                if (networkInfo != null && networkInfo.isConnected()) {
-                    View progressIndicator = findViewById(R.id.loading_indicator);
-                    progressIndicator.setVisibility(View.GONE);
-                    mEmptyStateTextView.setVisibility(View.GONE);
-                    View image = findViewById(R.id.imageview);
-                    image.setVisibility(View.GONE);
-                    getLoaderManager().restartLoader(EARTHQUAKE_LOADER_ID, null, MainActivity.this);
-                } else {
-                    clearView();
+            public void onResponse(@NonNull Call<Example> call, @NonNull Response<Example> response) {
+                Log.v("AMAN", "URL" + response.raw().request().url().toString() + "Response code" + response.code());
+                ArrayList<Feature> features = response.body().getFeatures();
+                if (features.size() == 0)
+                    mEmptyStateTextView.setVisibility(View.VISIBLE);
+                mEmptyStateTextView.setText(R.string.no_earthquakes);
+                ArrayList<Properties> propertiesArrayList = new ArrayList<>();
+                for (int i = 0; i < features.size(); i++) {
+                    Properties properties = features.get(i).getProperties();
+                    propertiesArrayList.add(properties);
+
                 }
-                swipeRefreshLayout.setRefreshing(false);
+                features.clear();
+                View loadingIndicator = findViewById(R.id.loading_indicator);
+                loadingIndicator.setVisibility(View.GONE);
+                // Set empty state text to display "No earthquakes found."
+                if (!propertiesArrayList.isEmpty()) {
+                    earthQuakeClassAdapter.swapData(propertiesArrayList);
+                    mRecyclerView.setAdapter(earthQuakeClassAdapter);
+                } else {
+                    if (earthQuakeClassAdapter != null) {
+                        earthQuakeClassAdapter.clear();
+                    }
+                }
             }
-        }, 2000);
+
+            @Override
+            public void onFailure(@NonNull Call<Example> call, @NonNull Throwable t) {
+                Log.v("AMAN", t.toString());
+            }
+        });
+
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        PreferenceManager.getDefaultSharedPreferences(this).unregisterOnSharedPreferenceChangeListener(this);
+    }
 
     private void setupRecyclerview() {
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
@@ -89,55 +115,6 @@ public class MainActivity extends AppCompatActivity
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
     }
 
-    private void setupSwipeRerfeshLayout() {
-        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.container_recycler);
-        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                refreshAction();
-            }
-        });
-        swipeRefreshLayout.setColorSchemeColors(ContextCompat.getColor(this, android.R.color.holo_green_light),
-                ContextCompat.getColor(this, android.R.color.holo_blue_bright),
-                ContextCompat.getColor(this, android.R.color.holo_red_light),
-                ContextCompat.getColor(this, android.R.color.holo_orange_light));
-    }
-    @Override
-    public Loader<ArrayList<EarthQuakePojo>> onCreateLoader(int i, Bundle bundle) {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
-        String minmag = sharedPreferences.getString(getString(R.string.min_mag_key), "0");
-        String orderby = sharedPreferences.getString(getString(R.string.list_key_orderby),
-                getString(R.string.settings_orderby_mag_value));
-        Uri uri = Uri.parse(USGS_REQUEST_URL);
-        Uri.Builder builder = uri.buildUpon();
-        builder.appendQueryParameter("format", "geojson");
-        builder.appendQueryParameter("minmagnitude", minmag);
-        builder.appendQueryParameter("orderby", orderby);
-        Log.v("AMAN", builder.toString());
-        return new EarthquakeLoader(this, builder.toString());
-    }
-
-    @Override
-    public void onLoadFinished(Loader<ArrayList<EarthQuakePojo>> loader, ArrayList<EarthQuakePojo> earthQuakePojos) {
-        Log.v("AMAN", "InsideLoadfinished");
-
-        View loadingIndicator = findViewById(R.id.loading_indicator);
-        loadingIndicator.setVisibility(View.GONE);
-        // Set empty state text to display "No earthquakes found."
-        if (earthQuakePojos != null && !earthQuakePojos.isEmpty()) {
-            earthQuakeClassAdapter.swapData(earthQuakePojos);
-            mRecyclerView.setAdapter(earthQuakeClassAdapter);
-
-        } else {
-            earthQuakeClassAdapter.clear();
-            mEmptyStateTextView.setText(R.string.no_earthquakes);
-        }
-    }
-
-    @Override
-    public void onLoaderReset(Loader<ArrayList<EarthQuakePojo>> loader) {
-        earthQuakeClassAdapter.clear();
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -153,8 +130,6 @@ public class MainActivity extends AppCompatActivity
                 startActivity(intent);
                 return true;
             case R.id.refresh:
-                refreshAction();
-                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -164,12 +139,11 @@ public class MainActivity extends AppCompatActivity
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
         if (s.equals(getString(R.string.min_mag_key)) || s.equals(getString(R.string.list_key_orderby))) {
             mEmptyStateTextView.setVisibility(View.GONE);
-            earthQuakeClassAdapter.clear();
-            // Show the loading indicator while new data is being fetched
+            if (earthQuakeClassAdapter != null)
+                earthQuakeClassAdapter.clear();
             View loadingIndicator = findViewById(R.id.loading_indicator);
             loadingIndicator.setVisibility(View.VISIBLE);
-            // Restart the loader to requery the USGS as the query settings have been updated
-            getLoaderManager().restartLoader(EARTHQUAKE_LOADER_ID, null, MainActivity.this);
+            response();
         }
     }
 

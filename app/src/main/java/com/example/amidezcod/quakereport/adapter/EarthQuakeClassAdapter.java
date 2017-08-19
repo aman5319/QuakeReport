@@ -1,4 +1,4 @@
-package com.example.amidezcod.quakereport;
+package com.example.amidezcod.quakereport.adapter;
 
 import android.content.Context;
 import android.content.Intent;
@@ -13,6 +13,9 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 
+import com.example.amidezcod.quakereport.Model.Properties;
+import com.example.amidezcod.quakereport.R;
+
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -24,14 +27,14 @@ import java.util.Locale;
  * Created by amidezcod on 2/7/17.
  */
 
-class EarthQuakeClassAdapter extends RecyclerView.Adapter<EarthQuakeClassAdapter.MyViewHolder> {
+public class EarthQuakeClassAdapter extends RecyclerView.Adapter<EarthQuakeClassAdapter.MyViewHolder> {
     private static final int VIEW_TYPE_GREATEST = 0;
     private static final int VIEW_TYPE_CASUAL = 1;
     private int lastPosition = -1;
     private Context mContext;
     private ArrayList<Properties> propertiesArrayList;
 
-    EarthQuakeClassAdapter(Context mContext, ArrayList<Properties> propertiesArrayList) {
+    public EarthQuakeClassAdapter(Context mContext, ArrayList<Properties> propertiesArrayList) {
         this.mContext = mContext;
         this.propertiesArrayList = propertiesArrayList;
     }
@@ -209,13 +212,13 @@ class EarthQuakeClassAdapter extends RecyclerView.Adapter<EarthQuakeClassAdapter
         return propertiesArrayList.size();
     }
 
-    void swapData(ArrayList<Properties> propertiesArrayList) {
-        Collections.sort(propertiesArrayList, Collections.<Properties>reverseOrder());
+    public void swapData(ArrayList<Properties> propertiesArrayList) {
+        Collections.sort(propertiesArrayList,Collections.<Properties>reverseOrder());
         this.propertiesArrayList = propertiesArrayList;
         notifyDataSetChanged();
     }
 
-    void clear() {
+    public void clear() {
         if (propertiesArrayList != null && !propertiesArrayList.isEmpty()) {
             int sise = propertiesArrayList.size();
             propertiesArrayList.clear();
