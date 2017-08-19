@@ -29,11 +29,11 @@ class EarthQuakeClassAdapter extends RecyclerView.Adapter<EarthQuakeClassAdapter
     private static final int VIEW_TYPE_CASUAL = 1;
     private int lastPosition = -1;
     private Context mContext;
-    private ArrayList<EarthQuakePojo> mEarthQuakePojoArrayList;
+    private ArrayList<Properties> propertiesArrayList;
 
-    EarthQuakeClassAdapter(Context mContext, ArrayList<EarthQuakePojo> mEarthQuakePojoArrayList) {
+    EarthQuakeClassAdapter(Context mContext, ArrayList<Properties> propertiesArrayList) {
         this.mContext = mContext;
-        this.mEarthQuakePojoArrayList = mEarthQuakePojoArrayList;
+        this.propertiesArrayList = propertiesArrayList;
     }
 
     @Override
@@ -79,14 +79,13 @@ class EarthQuakeClassAdapter extends RecyclerView.Adapter<EarthQuakeClassAdapter
     @Override
     public void onBindViewHolder(MyViewHolder holder, int position) {
         final String LOCATION_SEPERATOR = "of";
-        EarthQuakePojo earthQuakePojo = mEarthQuakePojoArrayList.get(position);
+        final Properties properties = propertiesArrayList.get(position);
         if (holder.magGreat != null) {
-            String formattedMagnitude = formattedMagnitude(earthQuakePojo.getMagnitude());
+            String formattedMagnitude = formattedMagnitude(properties.getMag());
             holder.magGreat.setText(formattedMagnitude);
 
-
             //for location
-            String Location = earthQuakePojo.getPlaceName();
+            String Location = properties.getPlace();
             String primaryLocation;
             String locationOffset;
             if (Location.contains(LOCATION_SEPERATOR)) {
@@ -101,20 +100,20 @@ class EarthQuakeClassAdapter extends RecyclerView.Adapter<EarthQuakeClassAdapter
             holder.primaryLocationGreat.setText(primaryLocation);
 
             //for date and time
-            long epochtime = earthQuakePojo.getTime();
+            long epochtime = properties.getTime();
             Date date = new Date(epochtime);
             holder.dateGreat.setText(formatDate(date));
             holder.timeGreat.setText(formatTime(date));
         } else {
 
             //for magnitude
-            String formattedMagnitude = formattedMagnitude(earthQuakePojo.getMagnitude());
+            String formattedMagnitude = formattedMagnitude(properties.getMag());
             holder.mag.setText(formattedMagnitude);
             GradientDrawable gradientDrawable = (GradientDrawable) holder.mag.getBackground();
-            gradientDrawable.setColor(getMagnitudecolor(earthQuakePojo.getMagnitude()));
+            gradientDrawable.setColor(getMagnitudecolor(properties.getMag()));
 
             //for location
-            String Location = earthQuakePojo.getPlaceName();
+            String Location = properties.getPlace();
             String primaryLocation;
             String locationOffset;
             if (Location.contains(LOCATION_SEPERATOR)) {
@@ -129,7 +128,7 @@ class EarthQuakeClassAdapter extends RecyclerView.Adapter<EarthQuakeClassAdapter
             holder.primaryLocation.setText(primaryLocation);
 
             //for date and time
-            long epochtime = earthQuakePojo.getTime();
+            long epochtime = properties.getTime();
             Date date = new Date(epochtime);
             holder.date.setText(formatDate(date));
             holder.time.setText(formatTime(date));
@@ -159,10 +158,6 @@ class EarthQuakeClassAdapter extends RecyclerView.Adapter<EarthQuakeClassAdapter
         return simpleDateFormat.format(date);
     }
 
-    void swapData(ArrayList<EarthQuakePojo> earthQuakePojos) {
-        Collections.sort(earthQuakePojos, Collections.<EarthQuakePojo>reverseOrder());
-        this.mEarthQuakePojoArrayList = earthQuakePojos;
-    }
 
     private int getMagnitudecolor(double magnitude) {
         int mColorResourceid;
@@ -211,19 +206,25 @@ class EarthQuakeClassAdapter extends RecyclerView.Adapter<EarthQuakeClassAdapter
 
     @Override
     public int getItemCount() {
-        return mEarthQuakePojoArrayList.size();
+        return propertiesArrayList.size();
+    }
+
+    void swapData(ArrayList<Properties> propertiesArrayList) {
+        Collections.sort(propertiesArrayList, Collections.<Properties>reverseOrder());
+        this.propertiesArrayList = propertiesArrayList;
+        notifyDataSetChanged();
     }
 
     void clear() {
-        if (mEarthQuakePojoArrayList != null && !mEarthQuakePojoArrayList.isEmpty()) {
-            int sise = mEarthQuakePojoArrayList.size();
-            mEarthQuakePojoArrayList.clear();
+        if (propertiesArrayList != null && !propertiesArrayList.isEmpty()) {
+            int sise = propertiesArrayList.size();
+            propertiesArrayList.clear();
             notifyItemRangeRemoved(0, sise);
         }
     }
 
-    private EarthQuakePojo getItem(int position) {
-        return mEarthQuakePojoArrayList.get(position);
+    private Properties getItem(int position) {
+        return propertiesArrayList.get(position);
     }
 
     class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -248,7 +249,7 @@ class EarthQuakeClassAdapter extends RecyclerView.Adapter<EarthQuakeClassAdapter
 
         @Override
         public void onClick(View view) {
-            Uri uri = Uri.parse(getItem(getAdapterPosition()).getStringUrl());
+            Uri uri = Uri.parse(getItem(getAdapterPosition()).getUrl());
             Intent intent = new Intent(Intent.ACTION_VIEW, uri);
             mContext.startActivity(intent);
 
